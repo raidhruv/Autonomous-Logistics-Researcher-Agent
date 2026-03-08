@@ -1,6 +1,12 @@
-from config.settings import get_settings
+from memory.vector_db import VectorDB
 
-settings = get_settings()
+db = VectorDB()
 
-print(settings.MODEL_NAME)
-print(settings.VECTOR_DB_PATH)
+db.add_document(
+    "doc1",
+    "Autonomous trucks are transforming logistics supply chains."
+)
+
+results = db.search("future logistics automation")
+
+print(results)

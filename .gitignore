@@ -17,3 +17,6 @@ desktop.ini
 
 # Output reports
 outputs/reports/*
+
+# Vector database
+memory/chroma_db/

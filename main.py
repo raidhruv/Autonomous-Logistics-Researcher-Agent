@@ -1,7 +1,5 @@
-from tools.web_scraper import WebScraper
+from agents.researcher import ResearchAgent
 
-scraper = WebScraper()
+agent = ResearchAgent()
 
-text = scraper.scrape("https://en.wikipedia.org/wiki/Logistics")
-
-print(text[:500])
+agent.research("autonomous trucks logistics industry")

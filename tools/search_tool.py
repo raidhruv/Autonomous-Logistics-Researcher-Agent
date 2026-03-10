@@ -5,25 +5,27 @@ from config.settings import get_settings
 class SearchTool:
 
     def __init__(self):
+
         settings = get_settings()
 
-        self.api_key = settings.TAVILY_API_KEY
-        self.client = None
+        self.client = TavilyClient(api_key=settings.TAVILY_API_KEY)
 
-        if self.api_key:
-            self.client = TavilyClient(api_key=self.api_key)
 
     def search(self, query: str, max_results: int = 5):
 
-        if not self.client:
-            return {
-                "status": "Search disabled",
-                "reason": "Tavily API key not configured"
-            }
+        try:
 
-        results = self.client.search(
-            query=query,
-            max_results=max_results
-        )
+            response = self.client.search(
+                query=query,
+                max_results=max_results,
+                search_depth="advanced"
+            )
 
-        return results["results"]
+            urls = [r["url"] for r in response["results"]]
+
+            return urls
+
+        except Exception as e:
+
+            print(f"[SearchTool] Error: {e}")
+            return []

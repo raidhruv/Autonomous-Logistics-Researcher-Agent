@@ -2,6 +2,7 @@ from crewai import Agent
 from tools.search_tool import SearchTool
 from tools.web_scraper import WebScraper
 from tools.knowledge_store import KnowledgeStore
+from urllib.parse import urlparse
 
 class ResearchAgent:
 
@@ -21,34 +22,44 @@ class ResearchAgent:
             verbose=True
         )
 
-    def research(self, topic: str):
+        def filter_unique_domains(self, urls):
 
-        print(f"Researching topic: {topic}")
+            seen_domains = set()
+            filtered_urls = []
 
-        search_results = self.search_tool.search(topic)
+            for url in urls:
 
-        if not isinstance(search_results, list):
-            print("Search not available")
-            return
+                domain = urlparse(url).netloc
 
-        for i, result in enumerate(search_results):
+                if domain not in seen_domains:
+                   filtered_urls.append(url)
+                   seen_domains.add(domain)
 
-            url = result.get("url")
+            return filtered_urls
 
-            if not url:
-                continue
+    def research(self, query):
 
-            page = self.scraper.scrape(url)
+        print(f"[Researcher] Searching: {query}")
+        urls = self.search_tool.search(query)
+        urls = self.filter_unique_domains(urls)
+        for url in urls:
 
-            if page and len(page["text"]) > 300:
+            try:
 
-               text = page["text"]
-               title = page["title"]
+                page = self.scraper.scrape(url)
 
-               self.knowledge_store.store_document(
+                if not page:
+                     continue
+
+                text = page["text"]
+                title = page["title"]
+
+                self.knowledge_store.store_document(
                     text=text,
                     title=title,
                     source=url
-)
+                )
 
-            print(f"Stored research document from {url}")
+            except Exception as e:
+
+               print(f"[Researcher] Failed scraping {url}: {e}")

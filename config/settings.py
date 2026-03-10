@@ -4,13 +4,13 @@ from functools import lru_cache
 
 class Settings(BaseSettings):
 
-    # API keys (optional for now)
+    # API keys 
     OPENAI_API_KEY: str | None = None
     GROQ_API_KEY: str | None = None
     TAVILY_API_KEY: str | None = None
 
     # Models
-    MODEL_NAME: str = "llama3-70b-8192"
+    MODEL_NAME: str = "llama-3.3-70b-versatile"
     EMBEDDING_MODEL: str = "sentence-transformers/all-MiniLM-L6-v2"
 
     # Vector database

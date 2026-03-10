@@ -1,10 +1,6 @@
-from agents.query_planner import QueryPlanner
+from config.settings import get_settings
 
-planner = QueryPlanner()
+s = get_settings()
 
-queries = planner.generate_queries("What is customs duty")
-
-print("\nGenerated Queries:\n")
-
-for q in queries:
-    print("-", q)
+print(s.TAVILY_API_KEY)
+print(s.GROQ_API_KEY)

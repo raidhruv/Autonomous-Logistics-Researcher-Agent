@@ -2,6 +2,7 @@ from memory.vector_db import VectorDB
 from langchain_groq import ChatGroq
 from config.settings import get_settings
 from sentence_transformers import CrossEncoder
+from memory.citation_manager import CitationManager
 
 
 class Retriever:
@@ -9,6 +10,7 @@ class Retriever:
     def __init__(self):
         self.settings = get_settings()
         self.vector_db = VectorDB()
+        self.citation_manager = CitationManager()
 
         self.llm = ChatGroq(
             model=self.settings.MODEL_NAME,
@@ -50,7 +52,8 @@ Return each query on a new line.
 
         unique_docs = list(dict.fromkeys(all_docs))
         reranked_docs = self.rerank(query, unique_docs, top_k=k)
-        return reranked_docs
+        docs_with_citations = self.citation_manager.attach_citations(reranked_docs)
+        return docs_with_citations
 
     def build_context(self, documents):
 

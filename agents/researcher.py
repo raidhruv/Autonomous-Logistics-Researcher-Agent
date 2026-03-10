@@ -1,8 +1,7 @@
 from crewai import Agent
 from tools.search_tool import SearchTool
 from tools.web_scraper import WebScraper
-from memory.vector_db import VectorDB
-
+from tools.knowledge_store import KnowledgeStore
 
 class ResearchAgent:
 
@@ -10,7 +9,7 @@ class ResearchAgent:
 
         self.search_tool = SearchTool()
         self.scraper = WebScraper()
-        self.memory = VectorDB()
+        self.knowledge_store = KnowledgeStore()
 
         self.agent = Agent(
             role="Logistics Research Specialist",
@@ -46,12 +45,10 @@ class ResearchAgent:
                text = page["text"]
                title = page["title"]
 
-               self.memory.add_document(
-                   text,
-                   metadata={
-                       "source": url,
-                       "title": title
-                  }
-            )
+               self.knowledge_store.store_document(
+                    text=text,
+                    title=title,
+                    source=url
+)
 
             print(f"Stored research document from {url}")

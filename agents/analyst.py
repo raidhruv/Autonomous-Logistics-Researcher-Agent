@@ -1,5 +1,5 @@
-from langchain_openai import ChatOpenAI
-from memory.vector_db import VectorDB
+from langchain_groq import ChatGroq
+from memory.retriever import Retriever
 from config.settings import get_settings
 
 
@@ -9,11 +9,12 @@ class AnalystAgent:
 
         self.settings = get_settings()
 
-        self.vector_db = VectorDB()
+        self.retriever = Retriever()
 
-        self.llm = ChatOpenAI(
+        self.llm = ChatGroq(
             model=self.settings.MODEL_NAME,
-            temperature=0.2
+            temperature=0.2,
+            groq_api_key=self.settings.GROQ_API_KEY
         )
 
     def retrieve_documents(self, query: str, k: int = 5):
@@ -55,9 +56,8 @@ Provide structured insights including:
 
     def analyze(self, query):
 
-        documents = self.retrieve_documents(query)
-
-        context = self.build_context(documents)
+        documents = self.retriever.retrieve(query)
+        context = self.retriever.build_context(documents)
 
         prompt = self.build_prompt(query, context)
 

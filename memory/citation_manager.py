@@ -10,20 +10,17 @@ class CitationManager:
 
         for doc in documents:
 
-            if isinstance(doc, dict):
+            text = doc.get("text", "")
+            metadata = doc.get("metadata", {})
 
-                text = doc.get("text", "")
-                metadata = doc.get("metadata", {})
+            citation = (
+                f"\n\n[Citation | "
+                f"DocID: {metadata.get('doc_id')} | "
+                f"Chunk: {metadata.get('chunk_index')} | "
+                f"Source: {metadata.get('source')} | "
+                f"Section: {metadata.get('section')}]"
+            )
 
-                source = metadata.get("source", "Unknown source")
-                title = metadata.get("title", "Unknown title")
-
-                citation = f"\n\n[Source: {title} | {source}]"
-
-                formatted_docs.append(text + citation)
-
-            else:
-
-                formatted_docs.append(str(doc))
+            formatted_docs.append(text + citation)
 
         return formatted_docs

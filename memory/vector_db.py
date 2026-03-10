@@ -1,4 +1,5 @@
 import hashlib
+import uuid
 import chromadb
 from chromadb.utils import embedding_functions
 from config.settings import get_settings
@@ -35,28 +36,46 @@ class VectorDB:
 
         chunks = self.text_splitter.split_text(text)
 
-        for chunk in chunks:
+        doc_id = str(uuid.uuid4())
 
-             doc_id = hashlib.md5(chunk.encode("utf-8")).hexdigest()
+        for i, chunk in enumerate(chunks):
 
-             existing = self.collection.get(ids=[doc_id])
+            chunk_id = f"{doc_id}_{i}"
 
-             if existing["ids"]:
-                  continue
+            chunk_metadata = metadata.copy() if metadata else {}
 
-        self.collection.add(
-            ids=[doc_id],
-            documents=[chunk],
-            metadatas=[metadata] if metadata else None
-        )    
+            chunk_metadata.update({
+                "doc_id": doc_id,
+                "chunk_id": chunk_id,
+                "chunk_index": i,
+                "section": chunk_metadata.get("section", "unknown")
+            })
+
+            existing = self.collection.get(ids=[chunk_id])
+
+            if existing["ids"]:
+                continue
+
+            self.collection.add(
+                ids=[chunk_id],
+                documents=[chunk],
+                metadatas=[chunk_metadata]
+            )
     
-            
-
-    def search(self, query: str, n_results: int = 3):
+    def search(self, query, n_results=5):
 
         results = self.collection.query(
             query_texts=[query],
             n_results=n_results
         )
 
-        return results["documents"]
+        docs = []
+
+        for text, meta in zip(results["documents"][0], results["metadatas"][0]):
+
+            docs.append({
+                "text": text,
+                "metadata": meta
+            })
+
+        return docs

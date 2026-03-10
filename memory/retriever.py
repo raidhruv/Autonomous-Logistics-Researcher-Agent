@@ -37,7 +37,7 @@ Return each query on a new line.
         return [query] + queries
 
     def rerank(self, query, documents, top_k=5):
-        pairs = [(query, doc) for doc in documents]
+        pairs = [(query, doc["text"]) for doc in documents]
         scores = self.reranker.predict(pairs)
         ranked = sorted(zip(documents, scores), key=lambda x: x[1], reverse=True)
         return [doc for doc, score in ranked[:top_k]]
@@ -47,7 +47,7 @@ Return each query on a new line.
         if not documents:
            return []
 
-        tokenized_docs = [doc.split() for doc in documents]
+        tokenized_docs = [doc["text"].split() for doc in documents]
         bm25 = BM25Okapi(tokenized_docs)
         tokenized_query = query.split()
         scores = bm25.get_scores(tokenized_query)

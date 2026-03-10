@@ -1,5 +1,6 @@
 import hashlib
 from memory.vector_db import VectorDB
+import uuid
 
 
 class KnowledgeStore:
@@ -37,25 +38,29 @@ class KnowledgeStore:
 
         return chunks
 
-
     def store_document(self, text: str, title: str, source: str):
-
-        if not text or len(text.strip()) == 0:
-            return
 
         chunks = self._chunk_text(text)
 
-        for chunk in chunks:
+        doc_id = str(uuid.uuid4())
 
-            doc_id = self._generate_doc_id(chunk)
+        for idx, chunk in enumerate(chunks):
+
+            chunk_id = f"{doc_id}_{idx}"
 
             metadata = {
+                "doc_id": doc_id,
+                "chunk_id": chunk_id,
+                "source": source,
                 "title": title,
-                "source": source
+                "section": "unknown",  # placeholder for future section extraction
+                "chunk_index": idx
             }
 
             self.vector_db.add_document(
-                doc_id=doc_id,
                 text=chunk,
                 metadata=metadata
             )
+
+    
+            

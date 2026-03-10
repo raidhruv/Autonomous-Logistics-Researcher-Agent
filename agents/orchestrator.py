@@ -13,25 +13,37 @@ class Orchestrator:
         self.analyst = AnalystAgent()
         self.writer = WriterAgent()
 
+        self.max_research_rounds = 3
+
     def run(self, user_query):
 
-        print("\n[Orchestrator] Checking existing knowledge...\n")
+        print("\n[Orchestrator] Starting research process...\n")
 
-        documents = self.analyst.retriever.retrieve(user_query)
+        research_round = 0
 
-        if len(documents) < 3:
+        while research_round < self.max_research_rounds:
 
-           print("[Orchestrator] Knowledge insufficient. Running research.\n")
+            print(f"\n[Orchestrator] Research Round {research_round + 1}")
 
-           research_queries = self.planner.generate_queries(user_query)
+            documents = self.analyst.retriever.retrieve(user_query)
 
-           for q in research_queries:
-               self.researcher.research(q)
+            # Knowledge coverage check
+            if len(documents) >= 3:
 
-        else:
-             print("[Orchestrator] Using existing knowledge base.\n")
+               print("[Orchestrator] Knowledge coverage sufficient.")
+               break
 
-        print("\n[Orchestrator] Analyzing knowledge...\n")
+            print("[Orchestrator] Knowledge insufficient. Generating research queries.")
+
+            queries = self.planner.generate_queries(user_query)
+
+            for q in queries:
+                self.researcher.research(q)
+
+            research_round += 1
+
+
+        print("\n[Orchestrator] Running final analysis...\n")
 
         analysis = self.analyst.analyze(user_query)
 

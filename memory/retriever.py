@@ -48,7 +48,7 @@ Return each query on a new line.
             docs = results[0] if results else []
             all_docs.extend(docs)
 
-        unique_docs = list(set(all_docs))
+        unique_docs = list(dict.fromkeys(all_docs))
         reranked_docs = self.rerank(query, unique_docs, top_k=k)
         return reranked_docs
 

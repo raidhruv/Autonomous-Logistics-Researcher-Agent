@@ -1,24 +1,15 @@
-from agents.researcher import ResearchAgent
-from agents.analyst import AnalystAgent
+from agents.orchestrator import Orchestrator
 
 
 def main():
 
     query = input("Enter research query: ")
 
-    print("Collecting research data...")
+    orchestrator = Orchestrator()
 
-    # Step 1: collect research material
-    researcher = ResearchAgent()
-    researcher.research(query)
+    result = orchestrator.run(query)
 
-    print("Analyzing documents...")
-
-    # Step 2: analyze stored knowledge
-    analyst = AnalystAgent()
-    result = analyst.analyze(query)
-
-    print("\n=== Analysis ===\n")
+    print("\n===== FINAL REPORT =====\n")
     print(result)
 
 

@@ -13,20 +13,23 @@ class Orchestrator:
         self.analyst = AnalystAgent()
         self.writer = WriterAgent()
 
-    def run(self, user_query: str):
+    def run(self, user_query):
 
-        print("\n[Orchestrator] Planning research...\n")
+        print("\n[Orchestrator] Checking existing knowledge...\n")
 
-        research_queries = self.planner.generate_queries(user_query)
+        documents = self.analyst.retriever.retrieve(user_query)
 
-        print("Generated Queries:")
-        for q in research_queries:
-            print("-", q)
+        if len(documents) < 3:
 
-        print("\n[Orchestrator] Collecting research...\n")
+           print("[Orchestrator] Knowledge insufficient. Running research.\n")
 
-        for query in research_queries:
-            self.researcher.research(query)
+           research_queries = self.planner.generate_queries(user_query)
+
+           for q in research_queries:
+               self.researcher.research(q)
+
+        else:
+             print("[Orchestrator] Using existing knowledge base.\n")
 
         print("\n[Orchestrator] Analyzing knowledge...\n")
 

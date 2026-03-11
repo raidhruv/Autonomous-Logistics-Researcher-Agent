@@ -1,33 +1,30 @@
 from memory.vector_db import VectorDB
 from memory.retriever import Retriever
 
-# initialize components
+# initialize
 vector_db = VectorDB()
 retriever = Retriever()
 
-# add controlled test documents
+# add one document with metadata
 vector_db.add_document(
-    text="The customs duty rate in India is around 10 percent for many goods.",
-    metadata={"source": "test1", "title": "India Customs"}
+    text="""
+Customs duties are taxes imposed on imported goods.
+Ad valorem duty is calculated as a percentage of product value.
+""",
+    metadata={
+        "source": "test_source",
+        "title": "Customs Duty Guide",
+        "section": "Duty Calculation"
+    }
 )
 
-vector_db.add_document(
-    text="Customs duties are taxes imposed on imports and exports.",
-    metadata={"source": "test2", "title": "General Definition"}
-)
+# query
+query = "percentage customs duty calculation"
 
-vector_db.add_document(
-    text="Warehouse robotics is transforming logistics operations.",
-    metadata={"source": "test3", "title": "Logistics Robotics"}
-)
+docs = retriever.retrieve(query, k=2)
 
-# run retrieval
-query = "customs duty rate india"
+print("\nRetrieved Documents With Citations:\n")
 
-documents = retriever.retrieve(query, k=3)
-
-print("\nRetrieved Documents:\n")
-
-for doc in documents:
-    print(doc)
-    print("\n---\n")
+for d in docs:
+    print(d)
+    print("\n--------------------\n")

@@ -13,9 +13,16 @@ class VectorDB:
 
 # text splitter for chunking documents
         self.text_splitter = RecursiveCharacterTextSplitter(
-             chunk_size=500,
-             chunk_overlap=100
-)
+            chunk_size=500,
+            chunk_overlap=100,
+            separators=[
+                "\n\n",
+                "\n",
+                ". ",
+                " "
+            ]
+        )
+
 
 # persistent vector database
         self.client = chromadb.PersistentClient(
@@ -69,13 +76,15 @@ class VectorDB:
             n_results=n_results
         )
 
-        docs = []
+        documents = []
+    
+        docs = results.get("documents", [[]])[0]
+        metas = results.get("metadatas", [[]])[0]
 
-        for text, meta in zip(results["documents"][0], results["metadatas"][0]):
-
-            docs.append({
+        for text, meta in zip(docs, metas):
+            documents.append({
                 "text": text,
                 "metadata": meta
             })
 
-        return docs
+        return documents

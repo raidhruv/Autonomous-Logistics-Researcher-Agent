@@ -45,11 +45,18 @@ Return each query on a new line.
     def keyword_search(self, query, documents, top_k=5):
 
         if not documents:
-           return []
+            return []
 
-        tokenized_docs = [doc["text"].split() for doc in documents]
+        # handle both dict and string docs
+        def get_text(doc):
+            return doc["text"] if isinstance(doc, dict) else doc
+
+        tokenized_docs = [get_text(doc).split() for doc in documents]
+
         bm25 = BM25Okapi(tokenized_docs)
+
         tokenized_query = query.split()
+
         scores = bm25.get_scores(tokenized_query)
 
         ranked = sorted(
@@ -58,7 +65,7 @@ Return each query on a new line.
             reverse=True
         )
 
-        return [doc for doc, score in ranked[:top_k]]    
+        return [doc for doc, score in ranked[:top_k]]   
 
     def retrieve(self, query: str, k: int = 3):
 
@@ -67,10 +74,11 @@ Return each query on a new line.
 
         for q in queries:
             results = self.vector_db.search(q, n_results=k)
-            docs = results[0] if results else []
-            all_docs.extend(docs)
 
-        unique_docs = list(dict.fromkeys(all_docs))
+            if results:
+                all_docs.extend(results)
+
+        unique_docs = list({doc["text"]: doc for doc in all_docs}.values())
 
         # Hybrid Retrieval
         keyword_docs = self.keyword_search(query, unique_docs, top_k=k)
@@ -78,7 +86,7 @@ Return each query on a new line.
         # slight weighting toward semantic search
         semantic_weighted = unique_docs * 2
 
-        combined_docs = list(dict.fromkeys(unique_docs + keyword_docs))
+        combined_docs = list({doc["text"]: doc for doc in semantic_weighted + keyword_docs}.values())
         # Hybrid End
         reranked_docs = self.rerank(query, combined_docs, top_k=k)
 

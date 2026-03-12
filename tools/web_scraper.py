@@ -32,7 +32,7 @@ def scrape(self, url: str):
 
         text = " ".join(p.get_text(strip=True) for p in paragraphs)
 
-        if len(text) < 400:
+        if len(text) < 350:
             return None
 
         return {

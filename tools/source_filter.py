@@ -26,6 +26,19 @@ class SourceFilter:
             "gov",
             "edu"
         }
+        # SEO KEYWORDS TO IDENTIFY COMMERCIAL INTENT IN QUERIES
+        self.seo_keywords = {
+            "top",
+            "best",
+            "buy",
+            "deal",
+            "coupon",
+            "discount",
+            "review",
+            "vs",
+            "comparison",
+            "affiliate"
+        }
         # limit to 2 sources per domain to ensure diversity
         self.max_sources_per_domain = 2   
 
@@ -47,6 +60,16 @@ class SourceFilter:
                 return True
 
         return False
+    
+    def _is_seo_spam(self, url: str) -> bool:
+
+        url_lower = url.lower()
+
+        for keyword in self.seo_keywords:
+            if f"/{keyword}" in url_lower:
+                return True
+
+        return False
 
     def filter(self, results: List[Dict]) -> List[Dict]:
 
@@ -65,6 +88,9 @@ class SourceFilter:
             domain = self._extract_domain(url)
 
             if self._is_blocked(domain):
+                continue
+
+            if self._is_seo_spam(url): # seo spam check
                 continue
 
             # enforce domain limit

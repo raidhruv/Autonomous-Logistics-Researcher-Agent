@@ -1,6 +1,6 @@
 from tavily import TavilyClient
 from config.settings import get_settings
-
+from utils.logger import logger
 
 class SearchTool:
 
@@ -22,6 +22,7 @@ class SearchTool:
             )
 
             urls = [r["url"] for r in response["results"]]
+            logger.info(f"Search returned {len(urls)} URLs for query: {query}")
 
             return urls
 

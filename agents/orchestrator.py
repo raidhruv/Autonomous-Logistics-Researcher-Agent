@@ -3,6 +3,9 @@ from agents.researcher import ResearchAgent
 from agents.analyst import AnalystAgent
 from agents.writer import WriterAgent
 from evaluation.evaluator import Evaluator
+from utils.logger import logger
+
+
 
 
 class Orchestrator:
@@ -19,6 +22,7 @@ class Orchestrator:
         self.max_research_rounds = 3
 
     def run(self, user_query):
+        logger.info(f"Research started for query: {user_query}")
 
         print("\n[Orchestrator] Starting research process...\n")
 

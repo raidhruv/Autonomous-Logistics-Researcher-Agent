@@ -4,7 +4,7 @@ from config.settings import get_settings
 from sentence_transformers import CrossEncoder
 from memory.citation_manager import CitationManager
 from rank_bm25 import BM25Okapi
-
+from utils.logger import logger
 
 class Retriever:
 
@@ -90,6 +90,8 @@ Return each query on a new line.
         # Hybrid End
         reranked_docs = self.rerank(query, combined_docs, top_k=k)
 
+        
+        logger.info(f"Retriever returned {len(reranked_docs)} chunks for query: {query}")
         return reranked_docs
 
     def build_context(self, documents):

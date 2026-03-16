@@ -1,5 +1,6 @@
 import re
 from typing import List, Dict
+from utils.logger import logger
 
 
 class Evaluator:
@@ -25,6 +26,7 @@ class Evaluator:
             0.20 * citation_density +
             0.20 * hallucination_risk
         )
+        logger.info(f"Evaluation score: {quality_score}")
 
         issues = self._detect_issues(
             retrieval_relevance,

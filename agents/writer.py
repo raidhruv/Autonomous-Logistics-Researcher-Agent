@@ -1,7 +1,9 @@
+from urllib import response
 from annotated_types import doc
 from langchain_groq import ChatGroq
 from pydantic_settings import sources
 from config.settings import get_settings
+from utils.logger import logger
 
 
 class WriterAgent:
@@ -48,5 +50,8 @@ class WriterAgent:
         Analysis:
         {analysis}
     """
+        
         response = self.llm.invoke(prompt)
-        return response.content
+        report = response.content
+        logger.info("Research report generated")
+        return report

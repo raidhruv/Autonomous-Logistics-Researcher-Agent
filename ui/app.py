@@ -1,5 +1,7 @@
 import streamlit as st
 import requests
+import os
+st.write("STREAMLIT KEY:", os.getenv("TAVILY_API_KEY"))
 
 API_URL = "http://127.0.0.1:8000/research"
 

@@ -5,11 +5,10 @@ from utils.logger import logger
 class SearchTool:
 
     def __init__(self):
-
         settings = get_settings()
-
-        self.client = TavilyClient(api_key=settings.TAVILY_API_KEY)
-
+        if not settings.TAVILY_API_KEY:
+            raise ValueError("TAVILY_API_KEY is missing — check .env loading")
+        self.client = TavilyClient(api_key=settings.TAVILY_API_KEY) 
 
     def search(self, query: str, max_results: int = 5):
 
@@ -21,12 +20,19 @@ class SearchTool:
                 search_depth="advanced"
             )
 
-            urls = [r["url"] for r in response["results"]]
-            logger.info(f"Search returned {len(urls)} URLs for query: {query}")
+            documents = [
+                {
+                    "url": r.get("url"),
+                    "content": r.get("content"),
+                    "title": r.get("title")
+                }
+                for r in response["results"]
+            ]
 
-            return urls
+            logger.info(f"Search returned {len(documents)} documents for query: {query}")
+
+            return documents
 
         except Exception as e:
-
-            print(f"[SearchTool] Error: {e}")
-            return []
+            logger.error(f"Search failed: {e}")
+            raise RuntimeError(f"Tavily search failed: {e}")

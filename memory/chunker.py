@@ -1,5 +1,5 @@
 import tiktoken
-
+import re
 
 class SemanticChunker:
 
@@ -13,7 +13,7 @@ class SemanticChunker:
 
     def chunk(self, document):
 
-        paragraphs = document["text"].split("\n")
+        paragraphs = re.split(r'(?<=[.!?]) +', document["text"])
 
         chunks = []
         current_chunk = []
@@ -23,7 +23,7 @@ class SemanticChunker:
 
             tokens = self._token_count(p)
 
-            if current_tokens + tokens > self.max_tokens:
+            if current_tokens + tokens > self.max_tokens or len(current_chunk) >= 5:
 
                 chunk_text = " ".join(current_chunk)
 
@@ -41,6 +41,9 @@ class SemanticChunker:
 
         results = []
 
+        print("\n=== CHUNK DEBUG ===")
+        print(f"Input length: {len(document['text'])}")
+        print(f"Chunks created: {len(chunks)}")
         for i, chunk in enumerate(chunks):
 
             results.append({

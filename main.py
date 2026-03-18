@@ -1,19 +1,23 @@
-from agents.orchestrator import Orchestrator
-from utils.logger import logger
+from agents.researcher import ResearchAgent
 
 
 def main():
+    print("=== Autonomous Logistics Research Agent ===")
 
-    query = input("Enter research query: ")
+    agent = ResearchAgent()
 
-    logger.info(f"User query received: {query}")
+    while True:
+        query = input("\nEnter research query (or 'exit'): ")
 
-    orchestrator = Orchestrator()
+        if query.lower() == "exit":
+            break
 
-    report = orchestrator.run(query)
+        try:
+            agent.research(query)
+            print("\n[✔] Research completed.\n")
 
-    print("\n===== FINAL REPORT =====\n")
-    print(report)
+        except Exception as e:
+            print(f"\n[✖] Error: {e}\n")
 
 
 if __name__ == "__main__":

@@ -29,7 +29,7 @@ class Orchestrator:
 
             print(f"\n[Orchestrator] Research Round {research_round + 1}")
 
-            documents = self.analyst.retriever.retrieve(user_query)
+            documents = []
 
             # Knowledge coverage check
             if len(documents) >= 3:
@@ -47,6 +47,7 @@ class Orchestrator:
             research_round += 1
 
 
+        documents = self.analyst.retriever.retrieve(user_query)
         print("\n[Orchestrator] Running final analysis...\n")
 
         analysis = self.analyst.analyze(user_query)

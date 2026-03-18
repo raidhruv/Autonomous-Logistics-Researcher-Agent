@@ -17,17 +17,14 @@ class AnalystAgent:
             groq_api_key=self.settings.GROQ_API_KEY
         )
 
-    def retrieve_documents(self, query: str, k: int = 5):
+    def retrieve(self, query: str, k: int = 5):
 
-        results = self.vector_db.search(query, n_results=k)
-
-        docs = results[0] if results else []
-
+        docs = self.retriever.retrieve(query, k=k)
         return docs
 
     def build_context(self, documents):
 
-        context = "\n\n".join(documents)
+        context = "\n\n".join([doc["text"] for doc in documents])
 
         return context
 

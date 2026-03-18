@@ -24,7 +24,7 @@ class WriterAgent:
 
         for i, doc in enumerate(documents, 1):
             meta = doc.get("metadata", {})
-            source = meta.get("source", "unknown")
+            source = meta.get("url", "unknown")
             sources.append(f"[{i}] {source}")
 
         sources_text = "\n".join(sources)

@@ -1,22 +1,22 @@
 # Python
 __pycache__/
 *.pyc
-*.pyo
 
 # Virtual environment
 venv/
-.env/
 
-# VS Code
-.vscode/
+# Environment variables
+.env
 
-# OS
+# OS files
+desktop.ini
 .DS_Store
-Thumbs.db
 
 # Logs
 *.log
 
-# Data / DB (if large)
-chroma_db/
-*.sqlite3
+# Output reports
+outputs/reports/*
+
+# Vector database
+memory/chroma_db/

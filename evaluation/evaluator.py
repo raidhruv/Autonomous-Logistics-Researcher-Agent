@@ -2,7 +2,6 @@ import re
 from typing import List, Dict
 from utils.logger import logger
 
-
 class Evaluator:
     def __init__(self):
         pass

@@ -6,6 +6,8 @@ from agents.orchestrator import Orchestrator
 # ---------------------------
 if "status" not in st.session_state:
     st.session_state.status = "Idle"
+def update_status(msg):
+    st.session_state.status = msg
 
 if "logs" not in st.session_state:
     st.session_state.logs = []
@@ -27,14 +29,14 @@ def update_status(status, message=""):
     st.session_state.status = status
     st.session_state.status_message = message
 
-def log_event(message):
-    st.session_state.logs.append(message)
-
+def log_event(stage, message):
+    entry = f"[{stage}] {message}"
+    st.session_state.logs.append(entry)
 # -----------------------
 # PAGE CONFIG
 # -----------------------
 st.set_page_config(
-    page_title="Autonomous Research Agent",
+    page_title="Autonomous Logistics Research Agent",
     page_icon="🤖",
     layout="wide"
 )
@@ -69,7 +71,7 @@ st.markdown("""
 # -----------------------
 # TITLE
 # -----------------------
-st.title("🤖 Autonomous Research Agent")
+st.title("🤖 Autonomous Logistics Research Agent")
 st.caption("AI-powered research system")
 
 # -----------------------
@@ -88,17 +90,20 @@ with st.sidebar:
     status = st.session_state.get("status", "Idle")
     message = st.session_state.get("status_message", "")
 
-    st.markdown(f"**Stage:** {status}")
+    st.info(f"{status}")
+
     if message:
         st.caption(message)
+
+    st.markdown("---")
 
     st.markdown("## 🧠 Execution Trace")
 
     logs = st.session_state.get("logs", [])
 
     if logs:
-        for log in logs[-10:]:  # last 10 logs only
-            st.write(log)
+        for log in logs[-8:]:
+            st.text(log)
     else:
         st.caption("No activity yet")
 
@@ -106,34 +111,55 @@ with st.sidebar:
 # RUN LOGIC
 # -----------------------
 if run_button:
+    # RESET STATE FOR NEW RUN
+    st.session_state.logs = []
+    st.session_state.status = "Starting"
+    st.session_state.status_message = ""
     if not query:
         st.warning("Please enter a query")
     else:
         orchestrator = Orchestrator()
 
         update_status("Planning", "Expanding query...")
-        log_event("🧠 Planning queries")
+        log_event("Planning", "Expanding queries")
 
         orchestrator = Orchestrator()
 
         with st.spinner("Running research pipeline..."):
+            update_status("Planning", "Expanding query...")
+            log_event("Planning", "Expanding query")
 
             update_status("Researching", "Searching & scraping...")
-            log_event("🔍 Searching web")
-    
-            report = orchestrator.run(query)  # keep this for now
+            log_event("Researching", "Fetching sources")
 
-            update_status("Completed", "Report generated")
-            log_event("✅ Report generation complete")
+            result = orchestrator.run(query)
+            
 
-        st.session_state.report = report
+            st.session_state.report = result.get("report")
+            st.session_state.evaluation = result.get("evaluation")
+            st.session_state.citations = result.get("citations", [])
 
-        st.success("Research completed")
+            log_event("Generating", "Writing report")
+
+            update_status("Completed", "Done")
+            log_event("Completed", "Pipeline finished")
+
+            report = st.session_state.report
+
+            st.success("Research completed")
 
         # -----------------------
         # FORMAT REPORT
         # -----------------------
+        report = st.session_state.get("report", "")
+
         formatted_report = report.replace("\n", "<br>")
+
+        formatted_report = formatted_report.replace(
+            "[", "<span style='color:#4CAF50'>["
+        ).replace(
+            "]", "]</span>"
+        )
 
         # -----------------------
         # LAYOUT
@@ -160,44 +186,36 @@ if run_button:
             # ---- CITATIONS ----
             st.markdown("## 🔗 Citations")
 
-            # Simple extraction (placeholder)
-            citations = []
-            for line in report.split("\n"):
-                if "http" in line:
-                    citations.append(line)
+            citations = st.session_state.get("citations", [])
 
             if citations:
                 for c in citations:
-                    st.markdown(f"- {c}")
+                    with st.expander(f"[{c['id']}] {c['source']}"):
+                        st.write(c["text"])
             else:
-                st.info("No citation links found")
+                st.info("No citations available")
 
             # ---- METRICS ----
             st.markdown("## 📊 Evaluation")
 
-            # Replace with real evaluator later
-            evaluation = {
-                "quality": 0.78,
-                "relevance": 0.64,
-                "coverage": 1.0,
-                "hallucination": 0.52
-            }
+            evaluation = st.session_state.get("evaluation")
 
-            def metric(title, value):
-                st.markdown(f"""
-                <div class="metric-card">
-                    <h4>{title}</h4>
-                    <h2>{value:.2f}</h2>
-                </div>
-                """, unsafe_allow_html=True)
+            if evaluation:
+                col1, col2 = st.columns(2)
+                col3, col4 = st.columns(2)
 
-            metric("Quality", evaluation["quality"])
-            metric("Relevance", evaluation["relevance"])
-            metric("Coverage", evaluation["coverage"])
-            metric("Hallucination Risk", evaluation["hallucination"])
+                col1.metric("Quality", f"{evaluation.get('quality_score', 0):.2f}")
+                col2.metric("Relevance", f"{evaluation.get('retrieval_relevance', 0):.2f}")
+                col3.metric("Coverage", f"{evaluation.get('evidence_coverage', 0):.2f}")
+                col4.metric("Citation Density", f"{evaluation.get('citation_density', 0):.2f}")
 
-            st.markdown("### 📈 Progress")
+                st.metric("Hallucination Risk", f"{evaluation.get('hallucination_risk', 0):.2f}")
 
-            st.progress(evaluation["quality"])
-            st.progress(evaluation["relevance"])
-            st.progress(evaluation["coverage"])
+                issues = evaluation.get("issues", [])
+                if issues:
+                    st.warning("\n".join(issues))
+            else:
+                st.info("No evaluation available")
+
+
+           

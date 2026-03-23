@@ -45,16 +45,37 @@ class Orchestrator:
 
         # Write report
         report = self.writer.write_report(user_query, context)
+        # Build citations
+        citations = []
+
+        for i, chunk in enumerate(documents):
+            if isinstance(chunk, dict):
+                text = chunk.get("text", "")
+                source = chunk.get("source", "Unknown")
+            else:
+                text = str(chunk)
+                source = "Unknown"
+
+            citations.append({
+                "id": i + 1,
+                "text": text,
+                "source": source
+            })
 
         # Evaluate
         evaluation = self.evaluator.evaluate(
             query=user_query,
             retrieved_chunks=documents,
             report=report,
-            citations=[]
+            citations=citations
         )
 
         print("\n[Evaluator] Evaluation Results:")
         print(evaluation)
 
-        return report
+        
+        return {
+            "report": report,
+            "evaluation": evaluation,
+            "citations": citations
+        }

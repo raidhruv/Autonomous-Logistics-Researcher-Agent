@@ -49,8 +49,8 @@ class VectorDB:
                 "doc_id": doc_id,
                 "chunk_id": chunk_id,
                 "chunk_index": i,
-                "section": metadata.get("section", "unknown"),
-                "source": metadata.get("url")
+                "section": metadata.get("section") or "unknown",
+                "source": metadata.get("url") or "Unknown"
             })
 
             existing = self.collection.get(ids=[chunk_id])

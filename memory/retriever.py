@@ -21,9 +21,7 @@ class Retriever:
         # Strong cross-encoder for reranking
         self.reranker = CrossEncoder("cross-encoder/ms-marco-MiniLM-L-6-v2")
 
-    # --------------------------------------------------
     # QUERY EXPANSION
-    # --------------------------------------------------
     def expand_query(self, query: str):
         prompt = f"""
 Generate 4 diverse semantic search queries for the topic below.
@@ -49,9 +47,7 @@ Return each query on a new line.
         # Always include original query
         return [query] + queries
 
-    # --------------------------------------------------
-    # LIMIT CHUNKS PER SOURCE (IMPORTANT)
-    # --------------------------------------------------
+
     def limit_per_source(self, documents, max_per_source=2):
         source_counts = {}
         filtered = []
@@ -68,9 +64,6 @@ Return each query on a new line.
 
         return filtered
 
-    # --------------------------------------------------
-    # RERANKING (PURE SEMANTIC)
-    # --------------------------------------------------
     def rerank(self, query, documents, top_k=5):
         if not documents:
             return []
@@ -86,15 +79,13 @@ Return each query on a new line.
 
         return [doc for doc, _ in ranked[:top_k]]
 
-    # --------------------------------------------------
-    # MAIN RETRIEVE
-    # --------------------------------------------------
+
     def retrieve(self, query: str, k: int = 5):
         queries = self.expand_query(query)
 
         all_docs = []
 
-        # NO EARLY BREAK — collect broadly
+        
         for q in queries:
             results = self.vector_db.search(q, n_results=10)
 
@@ -107,10 +98,10 @@ Return each query on a new line.
             logger.warning(f"No documents found for query: {query}")
             return []
 
-        # CONTROL diversity instead of killing it
+        
         filtered_docs = self.limit_per_source(all_docs, max_per_source=2)
 
-        # FINAL AUTHORITY = reranker
+       
         reranked_docs = self.rerank(query, filtered_docs, top_k=k)
 
         logger.info(
@@ -120,9 +111,7 @@ Return each query on a new line.
 
         return reranked_docs
 
-    # --------------------------------------------------
-    # CONTEXT BUILDER (WITH IDS FOR WRITER)
-    # --------------------------------------------------
+    
     def build_context(self, documents):
         context_blocks = []
 

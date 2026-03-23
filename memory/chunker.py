@@ -27,7 +27,11 @@ class SemanticChunker:
 
                 chunk_text = " ".join(current_chunk)
 
-                chunks.append(chunk_text)
+                chunks.append({
+                    "text": chunk_text,
+                    "source": document.get("url", "Unknown"),
+                    "title": document.get("title", "")
+                })
 
                 # overlap
                 current_chunk = current_chunk[-2:]
@@ -47,12 +51,12 @@ class SemanticChunker:
         for i, chunk in enumerate(chunks):
 
             results.append({
-                "text": chunk,
-                "metadata": {
-                    "title": document["title"],
-                    "url": document["url"],
-                    "chunk_id": i
-                }
+                "text": chunk if isinstance(chunk, str) else chunk.get("text", ""),
+                "source": document.get("url", "Unknown"),
+                "title": document.get("title", ""),
+                "chunk_id": i
             })
+            print("\n=== FINAL CHUNK DEBUG ===")
+            print(results[0])
 
         return results

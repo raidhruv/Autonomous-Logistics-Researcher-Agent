@@ -1,3 +1,4 @@
+from typer import prompt
 from memory.vector_db import VectorDB
 from langchain_groq import ChatGroq
 from config.settings import get_settings
@@ -11,41 +12,75 @@ class Retriever:
         self.settings = get_settings()
         self.vector_db = VectorDB()
         self.citation_manager = CitationManager()
+        
 
         self.llm = ChatGroq(
             model=self.settings.MODEL_NAME,
             temperature=0,
             groq_api_key=self.settings.GROQ_API_KEY
         )
+        self.reranker = CrossEncoder("cross-encoder/ms-marco-MiniLM-L-6-v2")
+        print("Reranker initialized:", hasattr(self, "reranker"))
 
-        # Strong cross-encoder for reranking
+    def deduplicate_docs(self, documents):
+        seen = set()
+        unique = []
+
+        for doc in documents:
+            text = doc.get("text", "").strip()
+            if not text:
+                continue
+
+            if text in seen:
+                continue
+
+            seen.add(text)
+            unique.append(doc)
+
+        return unique
+
+        # cross-encoder for reranking
         self.reranker = CrossEncoder("cross-encoder/ms-marco-MiniLM-L-6-v2")
 
-    # QUERY EXPANSION
+        # query expansion       
     def expand_query(self, query: str):
-        prompt = f"""
-Generate 4 diverse semantic search queries for the topic below.
+            prompt = f"""
+        Generate 3 short semantic search queries for retrieval.
 
-Focus on:
-- different angles
-- different terminology
-- deeper subtopics
+        Rules:
+        - Each query must be under 10 words
+        - No questions
+        - No explanations
+        - No punctuation like '?'
+        - Focus on keywords and phrases
 
-Topic: {query}
 
-Return each query on a new line.
-"""
+        Topic: {query}
 
-        response = self.llm.invoke(prompt)
+        Return each query on a new line. No numbering, no explanation.
+        """
 
-        queries = [
-            q.strip()
-            for q in response.content.split("\n")
-            if q.strip()
-        ]
+            response = self.llm.invoke(prompt)
 
-        # Always include original query
-        return [query] + queries
+            raw_queries = response.content.split("\n")
+
+            # Step 1: clean + normalize
+            queries = [
+                q.strip().lower()
+                for q in raw_queries
+                if q.strip()
+                and len(q.split()) <= 10
+                and "?" not in q
+            ]
+
+            # Step 2: deduplicate
+            queries = list(set(queries))
+
+            # Step 3: enforce strict limit
+            queries = queries[:3]
+
+            # Step 4: always include original query FIRST
+            return [query] + queries
 
 
     def limit_per_source(self, documents, max_per_source=2):
@@ -77,15 +112,27 @@ Return each query on a new line.
             reverse=True
         )
 
-        return [doc for doc, _ in ranked[:top_k]]
+        # 🔥 STEP 4 — SCORE FILTER
+        threshold = 0.8
 
+        filtered = [
+            doc for doc, score in ranked
+            if score is not None and score > threshold
+        ]
+
+        # fallback (important)
+        if not filtered:
+            filtered = [doc for doc, _ in ranked[:top_k]]
+
+        return filtered[:top_k]
+        print(f"[DEBUG] Rerank scores: {[round(s,2) for s in scores]}")
 
     def retrieve(self, query: str, k: int = 5):
         queries = self.expand_query(query)
 
-        all_docs = []
 
-        
+        all_docs = []
+  
         for q in queries:
             results = self.vector_db.search(q, n_results=10)
 
@@ -94,14 +141,17 @@ Return each query on a new line.
 
             all_docs.extend(results)
 
+        all_docs = self.deduplicate_docs(all_docs)
+
         if not all_docs:
             logger.warning(f"No documents found for query: {query}")
             return []
 
-        
         filtered_docs = self.limit_per_source(all_docs, max_per_source=2)
 
-       
+        # HARD CAP BEFORE RERANK
+        filtered_docs = filtered_docs[:15]
+
         reranked_docs = self.rerank(query, filtered_docs, top_k=k)
 
         logger.info(

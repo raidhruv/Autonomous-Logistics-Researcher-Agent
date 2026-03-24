@@ -1,3 +1,4 @@
+from email.mime import text
 import hashlib
 import uuid
 import chromadb
@@ -36,18 +37,22 @@ class VectorDB:
         }
         """
 
-        doc_id = str(uuid.uuid4())
+        def get_hash(text):
+            return hashlib.md5(text.encode()).hexdigest()
 
         for i, chunk in enumerate(chunks):
 
             text = chunk["text"]
             metadata = chunk.get("metadata", {}).copy()
 
-            chunk_id = f"{doc_id}_{i}"
+            text = chunk["text"].strip()
+            chunk_hash = get_hash(text)
+
+            chunk_id = chunk_hash
 
             metadata.update({
-                "doc_id": doc_id,
                 "chunk_id": chunk_id,
+                "hash": chunk_hash,
                 "chunk_index": i,
                 "section": metadata.get("section") or "unknown",
                 "source": metadata.get("url") or "Unknown"
@@ -57,6 +62,8 @@ class VectorDB:
 
             if existing["ids"]:
                 continue
+
+            print(f"[DEBUG] Adding chunk: {chunk_id[:8]}")
 
             self.collection.add(
                 ids=[chunk_id],

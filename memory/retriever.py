@@ -41,7 +41,24 @@ class Retriever:
 
         # cross-encoder for reranking
         self.reranker = CrossEncoder("cross-encoder/ms-marco-MiniLM-L-6-v2")
+    def clean_text(self, text):
+        if not text:
+            return ""
 
+        blacklist = [
+            "ignore previous instructions",
+            "system:",
+            "assistant:",
+            "user:"
+        ]
+
+        text_lower = text.lower()
+        for b in blacklist:
+            if b in text_lower:
+                text = text.replace(b, "")
+
+        return text.strip()[:800]
+    
         # query expansion       
     def expand_query(self, query: str):
             prompt = f"""
@@ -112,7 +129,7 @@ class Retriever:
             reverse=True
         )
 
-        # 🔥 STEP 4 — SCORE FILTER
+        # SCORE FILTER
         threshold = 0.8
 
         filtered = [
@@ -120,7 +137,7 @@ class Retriever:
             if score is not None and score > threshold
         ]
 
-        # fallback (important)
+        # fallback
         if not filtered:
             filtered = [doc for doc, _ in ranked[:top_k]]
 
@@ -166,7 +183,7 @@ class Retriever:
         context_blocks = []
 
         for i, doc in enumerate(documents, start=1):
-            text = doc.get("text", "")
+            text = self.clean_text(doc.get("text", ""))
             url = doc.get("metadata", {}).get("url", "unknown")
 
             block = f"[{i}] {text}\n(Source: {url})"

@@ -21,6 +21,8 @@ Python • Streamlit • LLMs • Vector DB (Chroma/FAISS)
 ## Usage
 
 ```bash
+git clone https://github.com/raidhruv/Autonomous-Logistics-Researcher-Agent
+cd Autonomous-Logistics-Researcher-Agent
 pip install -r requirements.txt
 streamlit run app.py
 ```

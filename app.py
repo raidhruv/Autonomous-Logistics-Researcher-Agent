@@ -71,7 +71,7 @@ st.markdown("""
 # -----------------------
 # TITLE
 # -----------------------
-st.title("🤖 Autonomous Logistics Research Agent")
+st.title("Autonomous Logistics Research Agent")
 st.caption("AI-powered research system")
 
 # -----------------------
@@ -79,13 +79,13 @@ st.caption("AI-powered research system")
 # -----------------------
 query = st.text_input("🔍 Enter your research query")
 
-run_button = st.button("🚀 Run Research")
+run_button = st.button("Run Research")
 
 # ---------------------------
 # SIDEBAR: SYSTEM STATUS
 # ---------------------------
 with st.sidebar:
-    st.markdown("## ⚙️ System Status")
+    st.markdown("## System Status")
 
     status = st.session_state.get("status", "Idle")
     message = st.session_state.get("status_message", "")
@@ -97,7 +97,7 @@ with st.sidebar:
 
     st.markdown("---")
 
-    st.markdown("## 🧠 Execution Trace")
+    st.markdown("## Execution Trace")
 
     logs = st.session_state.get("logs", [])
 
@@ -170,7 +170,7 @@ if run_button:
         # REPORT
         # -----------------------
         with col1:
-            st.markdown("## 📄 Research Report")
+            st.markdown("## Research Report")
 
             st.markdown(f"""
             <div class="card">

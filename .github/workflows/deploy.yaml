@@ -1,0 +1,44 @@
+name: Build and Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Login Docker
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+      - name: Build Image (with cache)
+        run: |
+          docker build \
+            --cache-from=${{ secrets.DOCKER_USERNAME }}/logistics-agent:latest \
+            -t ${{ secrets.DOCKER_USERNAME }}/logistics-agent:latest .
+
+      - name: Push Image
+        run: docker push ${{ secrets.DOCKER_USERNAME }}/logistics-agent:latest
+
+      - name: Setup Kubeconfig
+        run: |
+          mkdir -p $HOME/.kube
+          echo "${{ secrets.KUBECONFIG }}" > $HOME/.kube/config
+
+      - name: Create/Update Secrets
+        run: |
+          kubectl create secret generic app-secrets \
+            --from-literal=GROQ_API_KEY=${{ secrets.GROQ_API_KEY }} \
+            --from-literal=TAVILY_API_KEY=${{ secrets.TAVILY_API_KEY }} \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Deploy
+        run: |
+          kubectl apply -f k8s-deployment.yaml
+          kubectl rollout restart deployment logistics-agent
+          

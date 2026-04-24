@@ -6,6 +6,7 @@ from tools.web_scraper import WebScraper
 from tools.knowledge_store import KnowledgeStore
 from urllib.parse import urlparse
 from memory.chunker import SemanticChunker
+from state_manager import state_manager
 
 class ResearchAgent:
 
@@ -65,9 +66,13 @@ class ResearchAgent:
 
     def research(self, query):
 
+        state_manager.set("searching")
+
         print(f"[Researcher] Searching: {query}")
         results = self.search_tool.search(query)
+        state_manager.set("filtering")
         results = self.filter_unique_domains(results)
+        state_manager.set("scraping")
 
         for item in results:
             url = item["url"]
@@ -76,11 +81,14 @@ class ResearchAgent:
             try:
                 # KEY LOGIC
                 if content and len(content.strip()) > 100:
+                    state_manager.set("processing_content")
+
                     page = {
                         "text": content,
                     "title": item.get("title", ""),
                     }
                 else:
+                    state_manager.set("scraping_url")
                     page = self.scraper.scrape(url)
 
                 if not page:
@@ -92,11 +100,14 @@ class ResearchAgent:
                     "url": url
                 }
                 document["text"] = self.clean_text(document["text"])
+                state_manager.set("cleaning")
 
                 print("\n=== DOCUMENT SAMPLE ===")
                 print(document["text"][:300])
 
+                state_manager.set("chunking")
                 chunks = self.chunker.chunk(document)
+                state_manager.set("storing")
                 self.knowledge_store.store_document(chunks)
 
             except Exception as e:

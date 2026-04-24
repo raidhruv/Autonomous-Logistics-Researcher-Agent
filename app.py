@@ -1,9 +1,9 @@
 import streamlit as st
 from agents.orchestrator import Orchestrator
+from state_manager import state_manager
+import threading
 
-# ---------------------------
 # SESSION STATE INIT
-# ---------------------------
 if "status" not in st.session_state:
     st.session_state.status = "Idle"
 def update_status(msg):
@@ -21,9 +21,11 @@ if "evaluation" not in st.session_state:
 if "citations" not in st.session_state:
     st.session_state.citations = []
 
-# ---------------------------
+def sync_state():
+    backend_state = state_manager.get()
+    st.session_state.status = backend_state
+
 # STATE HELPERS
-# ---------------------------
 
 def update_status(status, message=""):
     st.session_state.status = status
@@ -32,18 +34,15 @@ def update_status(status, message=""):
 def log_event(stage, message):
     entry = f"[{stage}] {message}"
     st.session_state.logs.append(entry)
-# -----------------------
+
 # PAGE CONFIG
-# -----------------------
 st.set_page_config(
     page_title="Autonomous Logistics Research Agent",
     page_icon="🤖",
     layout="wide"
 )
 
-# -----------------------
-# STYLES (clean modern)
-# -----------------------
+# STYLES 
 st.markdown("""
 <style>
 .block-container {
@@ -68,29 +67,55 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# -----------------------
 # TITLE
-# -----------------------
 st.title("Autonomous Logistics Research Agent")
 st.caption("AI-powered research system")
 
-# -----------------------
-# INPUT (ALWAYS VISIBLE)
-# -----------------------
+import os
+
+# ---------------------------
+# SIMPLE FILE UPLOAD
+# ---------------------------
+st.markdown("## 📄 Upload PDF")
+
+uploaded_file = st.file_uploader("Choose a PDF file", type=["pdf"])
+
+if uploaded_file is not None:
+    os.makedirs("uploads", exist_ok=True)
+
+    file_path = os.path.join("uploads", uploaded_file.name)
+
+    with open(file_path, "wb") as f:
+        f.write(uploaded_file.getbuffer())
+
+    st.success(f"File uploaded successfully: {uploaded_file.name}")
+
+# INPUT 
 query = st.text_input("🔍 Enter your research query")
 
 run_button = st.button("Run Research")
 
-# ---------------------------
 # SIDEBAR: SYSTEM STATUS
-# ---------------------------
 with st.sidebar:
     st.markdown("## System Status")
 
     status = st.session_state.get("status", "Idle")
     message = st.session_state.get("status_message", "")
 
-    st.info(f"{status}")
+    status_map = {
+    "searching": "Searching...",
+    "filtering": "Filtering...",
+    "scraping": "Scraping...",
+    "scraping_url": "Scraping webpage...",
+    "processing_content": "Processing content...",
+    "cleaning": "Cleaning...",
+    "chunking": "Chunking...",
+    "storing": "Saving...",
+    "done": "Completed",
+    "idle": "Idle"
+    }
+
+    st.info(status_map.get(status, status))
 
     if message:
         st.caption(message)
@@ -107,13 +132,11 @@ with st.sidebar:
     else:
         st.caption("No activity yet")
 
-# -----------------------
 # RUN LOGIC
-# -----------------------
 if run_button:
     # RESET STATE FOR NEW RUN
     st.session_state.logs = []
-    st.session_state.status = "Starting"
+    st.session_state.status = "searching"
     st.session_state.status_message = ""
     if not query:
         st.warning("Please enter a query")
@@ -126,14 +149,16 @@ if run_button:
         orchestrator = Orchestrator()
 
         with st.spinner("Running research pipeline..."):
+            sync_state()
             update_status("Planning", "Expanding query...")
             log_event("Planning", "Expanding query")
 
             update_status("Researching", "Searching & scraping...")
             log_event("Researching", "Fetching sources")
 
+            sync_state()
             result = orchestrator.run(query)
-            
+            sync_state()
 
             st.session_state.report = result.get("report")
             st.session_state.evaluation = result.get("evaluation")
@@ -142,15 +167,16 @@ if run_button:
             log_event("Generating", "Writing report")
 
             update_status("Completed", "Done")
+            sync_state()
             log_event("Completed", "Pipeline finished")
 
             report = st.session_state.report
 
             st.success("Research completed")
 
-        # -----------------------
+        
         # FORMAT REPORT
-        # -----------------------
+    
         report = st.session_state.get("report", "")
 
         formatted_report = report.replace("\n", "<br>")
@@ -161,14 +187,10 @@ if run_button:
             "]", "]</span>"
         )
 
-        # -----------------------
         # LAYOUT
-        # -----------------------
         col1, col2 = st.columns([3, 1])
 
-        # -----------------------
         # REPORT
-        # -----------------------
         with col1:
             st.markdown("## Research Report")
 
@@ -178,24 +200,11 @@ if run_button:
             </div>
             """, unsafe_allow_html=True)
 
-        # -----------------------
+        
         # SIDE PANEL
-        # -----------------------
         with col2:
 
-            # ---- CITATIONS ----
-            st.markdown("## 🔗 Citations")
-
-            citations = st.session_state.get("citations", [])
-
-            if citations:
-                for c in citations:
-                    with st.expander(f"[{c['id']}] {c['source']}"):
-                        st.write(c["text"])
-            else:
-                st.info("No citations available")
-
-            # ---- METRICS ----
+            # METRICS
             st.markdown("## 📊 Evaluation")
 
             evaluation = st.session_state.get("evaluation")

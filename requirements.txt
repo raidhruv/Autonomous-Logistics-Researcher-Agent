@@ -12,5 +12,5 @@ langchain-groq
 rank-bm25
 readability-lxml
 chardet
-langchain-groq
 langchain-community
+streamlit

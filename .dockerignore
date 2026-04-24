@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Virtual env (CRITICAL)
+venv/
+
+# Env files (CRITICAL)
+.env
+
+# Git
+.git/
+.gitignore
+
+# Runtime/generated data (CRITICAL)
+logs/
+outputs/
+uploads/
+
+# If exists
+data/
+storage/
+rag/storage/
+
+# Misc
+*.ipynb
+.DS_Store
+Thumbs.db

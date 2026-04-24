@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: logistics-agent
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: logistics-agent
+  template:
+    metadata:
+      labels:
+        app: logistics-agent
+    spec:
+      containers:
+        - name: logistics-agent
+          image: dhruvrai25/logistics-agent:latest
+          ports:
+            - containerPort: 8501
+          env:
+            - name: GROQ_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: GROQ_API_KEY
+            - name: TAVILY_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: TAVILY_API_KEY
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: logistics-agent-service
+spec:
+  type: NodePort
+  selector:
+    app: logistics-agent
+  ports:
+    - port: 80
+      targetPort: 8501
+      nodePort: 30009

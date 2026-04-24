@@ -20,12 +20,12 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Build Image
-        shell: pwsh
+        shell: powershell
         run: |
           docker build --cache-from=${{ secrets.DOCKER_USERNAME }}/logistics-agent:latest -t ${{ secrets.DOCKER_USERNAME }}/logistics-agent:latest .
 
       - name: Push Image
-        shell: pwsh
+        shell: powershell
         run: |
           docker push ${{ secrets.DOCKER_USERNAME }}/logistics-agent:latest
 

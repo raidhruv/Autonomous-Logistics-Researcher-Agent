@@ -27,7 +27,9 @@ jobs:
             -t ${{ secrets.DOCKER_USERNAME }}/logistics-agent:latest .
 
       - name: Push Image
-        run: docker push ${{ secrets.DOCKER_USERNAME }}/logistics-agent:latest
+        shell: pwsh
+        run: |
+          docker push ${{ secrets.DOCKER_USERNAME }}/logistics-agent:latest
 
       #removed kubectl config setup as it's already done in the self-hosted runner
 

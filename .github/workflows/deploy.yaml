@@ -29,8 +29,6 @@ jobs:
         run: |
           docker push ${{ secrets.DOCKER_USERNAME }}/logistics-agent:latest
 
-      #removed kubectl config setup as it's already done in the self-hosted runner runnning on the powershell
-
       - name: Create/Update Secrets
         shell: powershell
         run: |
